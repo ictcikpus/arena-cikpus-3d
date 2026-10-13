@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#07111d" />
+  <meta name="description" content="Arena Cikpus 3D — prototipe MOBA 3D ringan berbasis web." />
+  <title>Arena Cikpus 3D — Battle Arena</title>
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand-lockup">
+        <div class="brand-emblem"><span>✦</span></div>
+        <div class="brand-copy"><strong>ARENA <i>CIKPUS</i></strong><small>LEGENDS ARE FORGED IN BATTLE</small></div>
+      </div>
+      <div class="match-score">
+        <div class="team-score blue-score"><span class="team-gem">◆</span><b id="blue-score">02</b></div>
+        <div class="match-clock"><span id="game-mode-label" class="live"><i></i> SOLO PRACTICE</span><b id="timer">00:00</b></div>
+        <div class="team-score red-score"><b id="red-score">01</b><span class="team-gem">◆</span></div>
+      </div>
+      <div class="top-actions"><span id="network-indicator" class="connection"><i></i><span id="network-label">LOCAL</span></span><button id="sound-game-btn" class="icon-btn sound-game-btn" aria-label="Audio on/off" title="Audio on/off">♫</button><span id="network-room-chip" class="network-room-chip" hidden><span>ROOM</span><b id="room-live-code"></b><button id="copy-room-code" title="Salin kode room">⧉</button></span><button id="pause-btn" class="icon-btn" aria-label="Jeda permainan" title="Jeda (P)">Ⅱ</button><button id="reset-btn" class="icon-btn" aria-label="Ulang permainan" title="Mulai ulang">↻</button></div>
+    </header>
+
+    <main id="game-root" aria-label="Area permainan 3D">
+      <div class="scene-vignette"></div><div id="fx-overlay" class="fx-overlay" aria-hidden="true"></div>
+      <section class="player-card glass">
+        <div class="portrait" id="portrait"><span>⚔</span><i>01</i></div>
+        <div class="player-info"><div class="player-name">CikpusHero <span class="role-pill">WARRIOR</span></div><div class="player-subtitle" id="player-subtitle">Penjaga Gerbang · Tim Biru</div>
+          <div class="statline"><span>HP</span><b id="hp-text">1000 / 1000</b></div><div class="statbar hpbar"><i id="hp-bar"></i></div>
+          <div class="statline mana-label"><span>MANA</span><b id="mana-text">300 / 300</b></div><div class="statbar manabar"><i id="mana-bar"></i></div>
+        </div>
+      </section>
+
+      <section class="objective glass"><div class="objective-icon">✧</div><div><small>OBJEKTIF PERTANDINGAN</small><strong id="objective-text">Hancurkan markas lawan</strong><span id="objective-sub">Kalahkan penjaga dan maju bersama minion</span></div></section>
+
+      <section class="minimap-panel glass"><div class="panel-heading"><span>MINIMAP</span><span class="map-live"><i></i> REALTIME</span></div><canvas id="minimap" width="180" height="180" aria-label="Minimap arena"></canvas><div class="map-legend"><span><i class="legend-blue"></i> TIM BIRU</span><span><i class="legend-red"></i> TIM MERAH</span></div></section>
+
+      <section class="camera-panel glass"><div class="camera-head"><span>◉ KAMERA</span><button id="camera-follow" class="tiny-toggle active" title="Ikuti karakter">FOLLOW</button></div><div class="camera-tools"><button id="rotate-left" title="Putar kamera ke kiri">↶</button><input id="camera-zoom" type="range" min="12" max="34" value="22" step="1" aria-label="Jarak kamera"><button id="rotate-right" title="Putar kamera ke kanan">↷</button></div><div class="camera-foot"><span>DRAG: PUTAR / UBAH SUDUT</span><span id="zoom-label">ZOOM 22</span></div></section>
+
+      <section class="right-hints glass"><div class="hint-title">KONTROL</div><div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>Bergerak</span></div><div><kbd>SPACE</kbd><span>Serangan dasar</span></div><div><kbd>Q</kbd><span>Dash</span></div><div><kbd>E</kbd><span>Arcane burst</span></div><div><kbd>R</kbd><span>Pemulihan</span></div><p>Scroll: zoom kamera<br>Drag vertikal: ubah kemiringan kamera</p></section>
+
+      <div class="target-banner" id="target-banner"><span class="target-dot"></span><span id="target-label">TARGET TERDETEKSI</span><span id="target-distance">JARAK 12M</span></div>
+
+      <div class="bottom-hud">
+        <div class="left-bottom"><div class="level-badge"><strong id="level">1</strong><small>LVL</small></div><div class="xp-area"><div class="xp-text"><span>PENGALAMAN</span><b id="xp-label">35 / 100 XP</b></div><div class="xpbar"><i id="xp-bar"></i></div><div class="control-tip"><span>⌨ WASD</span><span>•</span><span>SPACE SERANG</span></div></div></div>
+        <div class="skills-area">
+          <button id="skill-q" class="ability" aria-label="Skill Q Dash"><span class="keycap">Q</span><span class="ability-symbol dash-symbol">➤</span><span class="ability-name">DASH</span><span class="cooldown" id="q-cooldown"></span></button>
+          <button id="skill-e" class="ability" aria-label="Skill E Arcane Burst"><span class="keycap">E</span><span class="ability-symbol burst-symbol">✧</span><span class="ability-name">ARCANE</span><span class="cooldown" id="e-cooldown"></span></button>
+          <button id="skill-r" class="ability ultimate" aria-label="Skill R Pemulihan"><span class="keycap">R</span><span class="ability-symbol heal-symbol">✚</span><span class="ability-name">PULIHKAN</span><span class="cooldown" id="r-cooldown"></span></button>
+          <button id="attack" class="attack-btn" aria-label="Serang"><span class="attack-orbit"></span><span class="attack-icon">⚔</span><span class="attack-text">SERANG</span></button>
+        </div>
+      </div>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+      <div id="pause-overlay" class="pause-overlay"><div class="pause-card glass"><div class="pause-emblem">Ⅱ</div><h2>PERTANDINGAN DIJEDA</h2><p>Medan perang menunggu langkah berikutnya.</p><button id="resume-btn">LANJUTKAN PERTANDINGAN</button></div></div>
+      <div class="touch-help">Geser area kiri untuk bergerak · gunakan skill di kanan</div>
+    </main>
+    <footer class="footer"><span><i class="footer-spark">✦</i> ARENA CIKPUS 3D <b>•</b> PLAYABLE PROTOTYPE</span><span>THREE.JS <b>•</b> WEBGL <b>•</b> MOBA WEB <span class="footer-note">| Online room membutuhkan server WebSocket</span></span></footer>
+  </div>
+
+
+  <!-- First-launch splash: this is shown before the mode-selection menu and never starts a match automatically. -->
+  <section id="splash-screen" class="splash-screen" aria-label="Layar pembuka Arena Cikpus 3D">
+    <div class="splash-backdrop" aria-hidden="true">
+      <div class="splash-aurora aurora-one"></div><div class="splash-aurora aurora-two"></div>
+      <div class="splash-rune rune-one">✦</div><div class="splash-rune rune-two">✧</div><div class="splash-rune rune-three">◇</div>
+      <div id="splash-particles" class="splash-particles"></div>
+      <div class="splash-scanline"></div>
+    </div>
+    <div class="splash-topline"><span class="splash-brand-mark">✦</span><span>ARENA <b>CIKPUS 3D</b></span><span class="splash-build">WEB MOBA · BETA SEASON 01</span><button id="splash-audio-toggle" class="splash-audio-toggle" aria-pressed="true">♫ <span>AUDIO ON</span></button></div>
+    <div class="splash-content">
+      <div class="splash-insignia"><span class="insignia-ring ring-a"></span><span class="insignia-ring ring-b"></span><span class="insignia-glyph">⚔</span><span class="insignia-spark spark-a">✧</span><span class="insignia-spark spark-b">✦</span></div>
+      <div class="splash-eyebrow"><i></i> BANGKITKAN KEKUATANMU <i></i></div>
+      <h1>ARENA <em>CIKPUS</em><span>3D</span></h1>
+      <p class="splash-subtitle">BERTARUNG. BERTAHAN. JADI LEGENDA.</p>
+      <p class="splash-copy">Pilih hero, kuasai kemampuan, dan buktikan strategi terbaikmu di medan perang 3D langsung dari browser.</p>
+      <button id="enter-main-menu" class="splash-enter"><span class="splash-enter-icon">▶</span><span><b>MULAI PETUALANGAN</b><small>MASUK KE MENU PERMAINAN</small></span><span class="splash-enter-arrow">↗</span></button>
+      <div class="splash-trust-row"><span><i>◈</i> TANPA INSTALASI</span><span><i>✧</i> 3D BERBASIS THREE.JS</span><span><i>♧</i> MODE SOLO & ONLINE</span></div>
+    </div>
+    <div class="splash-bottomline"><span>POWERED BY THREE.JS</span><span class="splash-loading-track"><i></i></span><span>PRESS START TO CONTINUE</span></div>
+  </section>
+
+  <!-- Main menu: game mode selection, hero archetypes, audio settings, and online lobby. -->
+  <section id="main-menu" class="main-menu" aria-label="Menu utama Arena Cikpus 3D">
+    <div class="menu-grid-glow"></div>
+    <header class="menu-nav">
+      <div class="brand-lockup menu-brand"><div class="brand-emblem"><span>✦</span></div><div class="brand-copy"><strong>ARENA <i>CIKPUS</i></strong><small>REAL-TIME BATTLE ARENA</small></div></div>
+      <div class="menu-nav-right"><span class="season-chip"><i></i> BETA SEASON 01</span><button id="sound-toggle" class="sound-toggle" aria-pressed="false">♫ <span id="sound-toggle-label">AUDIO OFF</span></button></div>
+    </header>
+    <div class="menu-main">
+      <section class="menu-promo">
+        <div class="eyebrow"><span class="eyebrow-line"></span> STRATEGI • KERJA SAMA • KEMENANGAN</div>
+        <h1>KUASAI<br><em>ARENA.</em></h1>
+        <p class="menu-description">Pilih hero, kuasai skill, dan rebut kendali medan perang. Mulai dari latihan solo atau masuk ke room online bersama pemain lain.</p>
+        <div class="menu-cta-row"><button id="play-practice" class="primary-cta"><span class="cta-icon">▶</span><span><b>MASUK ARENA</b><small>LATIHAN SOLO</small></span><span class="cta-arrow">↗</span></button><button id="open-multiplayer" class="secondary-cta"><span>♧</span> MULTIPLAYER 5v5</button></div>
+        <div class="hero-select-block"><div class="section-label"><span>01 / PILIH HERO</span><span class="muted-label">ARCHETYPE</span></div>
+          <div class="hero-pick-grid" role="group" aria-label="Pilih arketipe hero">
+            <button class="hero-pick active" data-hero="guardian" aria-pressed="true"><span class="hero-pick-art guardian-art">⚔</span><span class="hero-pick-copy"><b>GUARDIAN</b><small>FIGHTER · SEIMBANG</small></span><span class="hero-pick-check">✓</span></button>
+            <button class="hero-pick" data-hero="arcanist" aria-pressed="false"><span class="hero-pick-art arcanist-art">✧</span><span class="hero-pick-copy"><b>ARCANIST</b><small>MAGE · BURST MAGIC</small></span><span class="hero-pick-check">✓</span></button>
+            <button class="hero-pick" data-hero="ranger" aria-pressed="false"><span class="hero-pick-art ranger-art">➶</span><span class="hero-pick-copy"><b>RANGER</b><small>SCOUT · MOBILITY</small></span><span class="hero-pick-check">✓</span></button>
+          </div><p id="hero-description" class="hero-description">Petarung garis depan dengan HP kuat dan damage konsisten.</p>
+        </div>
+      </section>
+      <aside class="mode-select-panel">
+        <div class="mode-panel-top"><div><span class="section-label">02 / MODE PERMAINAN</span><h2>Pilih cara bermain</h2></div><span class="panel-mark">AC<span>3D</span></span></div>
+        <button class="mode-card" data-start-mode="practice"><span class="mode-art practice-art"><i>◎</i></span><span class="mode-card-text"><b>SOLO PRACTICE</b><small>Latihan gerakan, kamera, dan skill tanpa tekanan.</small><em>OFFLINE · LANGSUNG MAIN</em></span><span class="mode-arrow">↗</span></button>
+        <button class="mode-card" data-start-mode="brawl"><span class="mode-art brawl-art"><i>✹</i></span><span class="mode-card-text"><b>BRAWL VS AI</b><small>Bot lebih agresif untuk latihan pertarungan.</small><em>OFFLINE · AI BATTLE</em></span><span class="mode-arrow">↗</span></button>
+        <button class="mode-card online-card" data-open-multiplayer="quick"><span class="mode-art online-art"><i>♧</i></span><span class="mode-card-text"><b>ONLINE 5v5</b><small>Masuk matchmaking atau bergabung bersama teman.</small><em>SERVER WEBSOCKET DIPERLUKAN</em></span><span class="mode-arrow">↗</span></button>
+        <button class="mode-card custom-card" data-open-multiplayer="custom"><span class="mode-art custom-art"><i>⌘</i></span><span class="mode-card-text"><b>CUSTOM ROOM</b><small>Buat room privat atau masukkan kode teman.</small><em>MAIN BARENG TEMAN</em></span><span class="mode-arrow">↗</span></button>
+        <div class="mode-panel-foot"><span><i class="status-dot"></i> <b>WEBGL READY</b></span><span>NO DOWNLOAD REQUIRED</span></div>
+      </aside>
+    </div>
+    <footer class="menu-footer"><span>ARENA CIKPUS 3D <b>•</b> EARLY PLAYABLE BUILD</span><div class="audio-settings"><label for="music-volume">MUSIC</label><input id="music-volume" type="range" min="0" max="100" value="24" aria-label="Volume musik"><label for="sfx-volume">SFX</label><input id="sfx-volume" type="range" min="0" max="100" value="72" aria-label="Volume sound effect"></div><span>WASD MOVE <b>•</b> SPACE ATTACK <b>•</b> Q/E/R SKILLS</span></footer>
+  </section>
+
+  <section id="multiplayer-modal" class="modal-backdrop" aria-label="Lobby multiplayer" aria-hidden="true">
+    <div class="lobby-card">
+      <div class="lobby-heading"><div><span class="section-label">ARENA NETWORK</span><h2>Multiplayer Lobby</h2><p>Hubungkan game ke server Colyseus untuk bermain bersama.</p></div><button id="close-multiplayer" class="modal-close" aria-label="Tutup lobby">×</button></div>
+      <div class="lobby-notice"><span class="notice-icon">⌁</span><p><b>GitHub Pages hanya menjalankan game client.</b><br>Masukkan URL backend Node.js/Colyseus yang mendukung HTTPS dan WebSocket secure.</p></div>
+      <label class="field-label" for="player-name">NAMA PEMAIN</label><input id="player-name" class="lobby-input" maxlength="20" placeholder="Contoh: CikpusHero" value="CikpusHero">
+      <label class="field-label" for="server-url">URL SERVER COLYSEUS</label><input id="server-url" class="lobby-input" placeholder="https://server-game-anda.example" autocomplete="url">
+      <p class="field-hint">Contoh format: https://nama-server.onrender.com — jangan gunakan URL GitHub Pages di sini.</p>
+      <div class="lobby-actions"><button id="quick-match-btn" class="lobby-primary">CARI MATCH 5v5 <span>↗</span></button><button id="create-room-btn" class="lobby-secondary">BUAT ROOM PRIVAT</button></div>
+      <div class="join-room-row"><input id="room-code" class="lobby-input" placeholder="Masukkan kode room teman"><button id="join-room-btn" class="lobby-secondary">GABUNG</button></div>
+      <div id="lobby-status" class="lobby-status" role="status">Belum terhubung. Server dapat dikonfigurasi setelah backend di-deploy.</div>
+      <div class="room-code-box" id="room-code-box" hidden><span>KODE ROOM ANDA</span><b id="room-share-code">—</b><button id="copy-room-code-modal">SALIN KODE</button></div>
+      <div class="lobby-bottom"><span>10 PLAYER MAX</span><span>WSS / HTTPS ONLY DI WEBSITE HTTPS</span></div>
+    </div>
+  </section>
+
+
+
+  <!-- Main menu: game mode selection, hero archetypes, audio settings, and online lobby. -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
